@@ -5,8 +5,13 @@ module MarkovChain where
 
 import Data.Monoid
 import Data.List
+import Control.Monad.State
 import Data.Maybe
 import Data.Graph.Inductive
+import System.Random
+import Data.Random
+import Data.Random.Source
+import Data.Random.Extras
 import qualified Data.Map as Map
 
 type MarkovChain a = Gr (a) Int
@@ -44,4 +49,20 @@ makeEdgesH ns (x:y:ys) = Map.insertWith' (+) (n1,n2) 1 m
        n2 = lookupNode ns y
 
 lookupNode nodes label = n
- where (n,_) = fromJust $ find (\(_,l) -> l == label) nodes
+  where (n,_) = fromJust $ find (\(_,l) -> l == label) nodes
+
+traverse :: StdGen -> MarkovChain a -> Int -> [a]
+traverse g mc n = fst $ traverseH g' mc n start
+  where (start, g') = rChoice g $ nodes mc
+
+traverseH :: StdGen -> MarkovChain a -> Int -> Int -> ([a], StdGen)
+traverseH g mc  0 node = ([a], g)
+  where a = fromJust $ lab mc node
+traverseH g mc n node = (a:as, g'')
+  where (as, g'') = traverseH g' mc (n-1) nextNode
+        a = fromJust $ lab mc node
+        (nextNode, g') = rChoice g connected
+        connected = concatMap (\(_,n,w) -> replicate w n) $ out mc node
+
+rChoice :: StdGen -> [a] -> (a, StdGen)
+rChoice g xs = runState (runRVar (choice xs) StdRandom) g
