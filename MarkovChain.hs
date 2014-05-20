@@ -1,18 +1,22 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-} -- for Monoid instance
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE OverlappingInstances #-} -- for custom "Show"
 module MarkovChain where
 
 import Data.Monoid
 import Data.List
 import Data.Maybe
-import qualified Data.Map as Map
 import Data.Graph.Inductive
+import qualified Data.Map as Map
 
 type MarkovChain a = Gr (a) Int
 
 instance Monoid (MarkovChain a) where
   mempty  = empty
   mappend = addChains
+
+instance (Show a) => Show (MarkovChain a) where
+  show = init . prettify
 
 addChains mc1 mc2 = foldr (&) mc1 newContexts
   where oldContexts = map (context mc2) (nodes mc2)
