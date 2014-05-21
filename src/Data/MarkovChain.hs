@@ -1,7 +1,11 @@
 {-# LANGUAGE TypeSynonymInstances #-} -- for Monoid instance
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverlappingInstances #-} -- for custom "Show"
-module MarkovChain where
+module Data.MarkovChain
+  (
+    markovChain     -- Constructor
+  , traverse        -- generate a random traversal of the chain
+  ) where
 
 import Data.Monoid
 import Data.List
