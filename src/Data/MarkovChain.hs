@@ -25,7 +25,12 @@ instance Monoid (MarkovChain a) where
   mappend = addChains
 
 instance (Show a) => Show (MarkovChain a) where
-  show = init . prettify
+  show mc = init . concat $ map showContext $ gsel (const True) mc
+    where showContext (_,_,nodeLabel,links) = show nodeLabel
+                                           <> "->"
+                                           <> (show $ llnk links)
+                                           <> "\n"
+          llnk = map (\(weight, n) -> (fromJust $ lab mc n, weight))
 
 addChains mc1 mc2 = foldr (&) mc1 newContexts
   where oldContexts = map (context mc2) (nodes mc2)
