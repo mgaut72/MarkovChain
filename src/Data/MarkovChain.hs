@@ -32,12 +32,10 @@ instance (Show a) => Show (MarkovChain a) where
                                            <> "\n"
           llnk = map (\(weight, n) -> (fromJust $ lab mc n, weight))
 
-addChains mc1 mc2 = foldr (&) mc1 newContexts
-  where oldContexts = map (context mc2) (nodes mc2)
-        newContexts = zipWith changeNodeNumber oldContexts openNodeNumbers
-        changeNodeNumber (a,_,b,c) x = (a, x, b, c)
-        openNodeNumbers = newNodes (length oldContexts) mc1
 
+--
+-- type constructor
+--
 markovChain :: (Eq a) => [a] -> MarkovChain a
 markovChain xs = mkGraph ns es
   where ns = makeNodes xs
@@ -60,6 +58,9 @@ makeEdgesH ns (x:y:ys) = Map.insertWith' (+) (n1,n2) 1 m
 lookupNode nodes label = n
   where (n,_) = fromJust $ find (\(_,l) -> l == label) nodes
 
+--
+-- Random traversal of the data structure
+--
 traverse :: StdGen -> MarkovChain a -> Int -> [a]
 traverse g mc n = fst $ traverseH g' mc n start
   where (start, g') = rChoice g $ nodes mc
@@ -75,3 +76,15 @@ traverseH g mc n node = (a:as, g'')
 
 rChoice :: StdGen -> [a] -> (a, StdGen)
 rChoice g xs = runState (runRVar (choice xs) StdRandom) g
+
+
+--
+-- for the monoid instance
+--
+addChains mc1 mc2 = foldr (&) mc1 newContexts
+  where oldContexts = map (context mc2) (nodes mc2)
+        newContexts = zipWith changeNodeNumber oldContexts openNodeNumbers
+        changeNodeNumber (a,_,b,c) x = (a, x, b, c)
+        openNodeNumbers = newNodes (length oldContexts) mc1
+
+
