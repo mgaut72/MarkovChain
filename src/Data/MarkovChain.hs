@@ -14,10 +14,10 @@ import System.Random
 import Data.Random
 import Data.Random.Source
 import Data.Random.Extras
-import Data.Seq
+import Data.Sequence
 import qualified Data.Map as Map
 
-type MarkovChain a = Map.Map a (Seq.Seq a)
+type MarkovChain a = Map.Map a (Seq a)
 
 instance Ord a => Monoid (MarkovChain a) where
   mempty  = Map.empty
@@ -45,6 +45,6 @@ traverse g mc n = fst $ traverseH g' mc n start
 traverseH :: Ord a => StdGen -> MarkovChain a -> Int -> a -> ([a], StdGen)
 traverseH g mc 0 a = ([a], g)
 traverseH g mc n a = (a:as, g'')
-  where (as, g'')  = traverseH g' mc (n-1) nextA
+  where (as, g'')  = traverseH g' mc (n-1) nxtA
         (nxtA, g') = rChoice g $ fromJust $ Map.lookup a mc
         rChoice g xs = runState (runRVar (choiceSeq xs) StdRandom) g
