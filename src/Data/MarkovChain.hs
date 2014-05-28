@@ -5,6 +5,7 @@ module Data.MarkovChain
   (
     markovChain     -- Constructor
   , traverse        -- generate a random traversal of the chain
+  , traverse'       -- generate a random traversal of the chain, constant seed
   ) where
 
 import Data.Monoid
@@ -37,6 +38,9 @@ markovChain (x:y:xs) = Map.insertWith' mappend x (singleton y) (markovChain (y:x
 --
 -- Random traversal of the data structure
 --
+traverse' :: Ord a => MarkovChain a -> Int -> [a]
+traverse' = traverse $ mkStdGen 75812369417
+
 traverse :: Ord a => StdGen -> MarkovChain a -> Int -> [a]
 traverse g mc n = fst $ traverseH g' mc n start
   where (start, g')  = rChoice g $ Map.keys mc
