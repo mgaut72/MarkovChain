@@ -30,7 +30,7 @@ library
 executable MarkovBot
   Hs-Source-Dirs:      markov-bot
   Main-Is:             Main.hs
-  Other-Modules:       Web.MarkovBot
+  Other-Modules:       Web.MarkovBot.Main
   build-depends:       base >=4.6 && <4.7
                      , markov
                      , mtl >=2.1 && <2.2

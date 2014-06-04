@@ -1,4 +1,4 @@
-module Web.MarkovBot where
+module Web.MarkovBot.Main where
 import Data.List
 import Network
 import System.IO
