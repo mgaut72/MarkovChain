@@ -8,6 +8,8 @@ import Control.Monad.Reader
 import Control.Exception
 import Text.Printf
 import Prelude hiding (catch)
+import Data.Monoid
+
 import Data.MarkovChain
 
 server = "irc.freenode.org"
@@ -44,7 +46,7 @@ connect = notify $ do
     t <- getClockTime
     h <- connectTo server (PortNumber (fromIntegral port))
     hSetBuffering h NoBuffering
-    return (Bot h t)
+    return (Bot h t mempty)
   where
     notify a = bracket_
         (printf "Connecting to %s ... " server >> hFlush stdout)

@@ -3,7 +3,8 @@
 {-# LANGUAGE OverlappingInstances #-} -- for custom "Show"
 module Data.MarkovChain
   (
-    markovChain     -- Constructor
+    MarkovChain     -- Type
+  , markovChain     -- Constructor
   , traverse        -- generate a random traversal of the chain
   , traverse'       -- generate a random traversal of the chain, constant seed
   ) where
@@ -18,7 +19,9 @@ import Data.Random.Extras
 import Data.Sequence
 import qualified Data.Map as Map
 
-type MarkovChain a = Map.Map a (Seq a)
+-- keep the implementation hidden
+type MarkovChain a = MarkovChainImpl a
+type MarkovChainImpl a = Map.Map a (Seq a)
 
 instance Ord a => Monoid (MarkovChain a) where
   mempty  = Map.empty
