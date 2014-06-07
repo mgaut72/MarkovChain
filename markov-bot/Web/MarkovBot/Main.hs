@@ -4,7 +4,7 @@ import Network
 import System.IO
 import System.Time
 import System.Exit
-import Control.Monad.Reader
+import Control.Monad.State
 import Control.Exception
 import Text.Printf
 import Prelude hiding (catch)
@@ -21,7 +21,7 @@ nick   = "MarkovBot"
 -- The 'Net' monad, a wrapper over IO, carrying the bot's immutable state.
 -- A socket and the bot's start time.
 --
-type Net = ReaderT Bot IO
+type Net = StateT Bot IO
 data Bot = Bot { socket :: Handle
                , starttime :: ClockTime
                , markovChain :: MarkovChain String
@@ -34,7 +34,7 @@ main :: IO ()
 main = bracket connect disconnect loop
   where
     disconnect = hClose . socket
-    loop st    = catch (runReaderT run st) doNothing
+    loop st    = catch (evalStateT run st) doNothing
     doNothing :: IOException -> IO ()
     doNothing = const $ return ()
 
@@ -62,7 +62,11 @@ run = do
     write "NICK" nick
     write "USER" (nick++" 0 * :tutorial bot")
     write "JOIN" chan
-    asks socket >>= listen
+    bot <- get
+    listen $ socket bot
+
+
+
 
 --
 -- Process each line from the server
@@ -96,7 +100,8 @@ privmsg s = write "PRIVMSG" (chan ++ " :" ++ s)
 --
 write :: String -> String -> Net ()
 write s t = do
-    h <- asks socket
+    bot <- get
+    let h = socket bot
     io $ hPrintf h "%s %s\r\n" s t
     io $ printf    "> %s %s\n" s t
 
@@ -106,8 +111,8 @@ write s t = do
 uptime :: Net String
 uptime = do
     now  <- io getClockTime
-    zero <- asks starttime
-    return . pretty $ diffClockTimes now zero
+    bot <- get
+    return . pretty $ diffClockTimes now (starttime bot)
 
 --
 -- Pretty print the date in '1d 9h 9m 17s' format
