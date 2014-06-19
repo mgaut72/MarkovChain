@@ -12,7 +12,7 @@ import Data.MarkovChain
 
 server = "irc.freenode.org"
 port   = 6667
-chan   = "#tutbot-testing"
+chan   = "#haskell"
 nick   = "MarkovBot"
 ownerNick = "mgaut72"
 
@@ -59,8 +59,7 @@ run = do
     write "NICK" nick
     write "USER" (nick++" 0 * :tutorial bot")
     write "JOIN" chan
-    bot <- get
-    listen $ socket bot
+    gets socket >>= listen
 
 --
 -- Process each line from the server
@@ -94,8 +93,8 @@ expandVocabulary x = modify updateBot
 
 speak :: Net ()
 speak = do
-  bot <- get
-  privmsg $ concat $ traverse' (mChain bot) 15
+  chain <- gets mChain
+  privmsg $ concat $ traverse' (chain) 15
 
 --
 -- Send a privmsg to the current chan + server
@@ -108,8 +107,7 @@ privmsg s = write "PRIVMSG" (chan ++ " :" ++ s)
 --
 write :: String -> String -> Net ()
 write s t = do
-    bot <- get
-    let h = socket bot
+    h <- gets socket
     io $ hPrintf h "%s %s\r\n" s t
     io $ printf    "> %s %s\n" s t
 
