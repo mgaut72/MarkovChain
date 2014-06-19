@@ -94,7 +94,7 @@ expandVocabulary x = modify updateBot
 speak :: Net ()
 speak = do
   chain <- gets mChain
-  privmsg $ concat $ traverse' (chain) 15
+  privmsg $ unwords $ traverse' (chain) 15
 
 --
 -- Send a privmsg to the current chan + server
