@@ -50,6 +50,7 @@ traverse g mc n = fst $ traverseH g' mc n start
         rChoice g xs = runState (runRVar (choice xs) StdRandom) g
 
 traverseH :: Ord a => StdGen -> MarkovChain a -> Int -> a -> ([a], StdGen)
+traverseH g mc _ a | Map.lookup a mc == Just empty = ([a], g)
 traverseH g mc 0 a = ([a], g)
 traverseH g mc n a = (a:as, g'')
   where (as, g'')  = traverseH g' mc (n-1) nxtA
