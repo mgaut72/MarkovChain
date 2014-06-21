@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Web.MarkovBot.Main where
 import Data.List
 import Network
@@ -8,6 +9,8 @@ import Control.Exception
 import Text.Printf
 import Prelude hiding (catch)
 import Data.Monoid
+import Control.Lens
+
 import Data.MarkovChain
 
 server = "irc.freenode.org"
@@ -21,9 +24,11 @@ ownerNick = "mgaut72"
 -- A socket and the markov chain structure
 --
 type Net = StateT Bot IO
-data Bot = Bot { socket :: Handle
-               , mChain :: MarkovChain String
+data Bot = Bot { _socket :: Handle
+               , _mChain :: MarkovChain String
                }
+
+makeLenses ''Bot
 
 --
 -- Set up actions to run on start and end, and run the main loop
@@ -31,7 +36,7 @@ data Bot = Bot { socket :: Handle
 main :: IO ()
 main = bracket connect disconnect loop
   where
-    disconnect = hClose . socket
+    disconnect = hClose . _socket
     loop st    = catch (evalStateT run st) doNothing
     doNothing :: IOException -> IO ()
     doNothing = const $ return ()
@@ -59,7 +64,7 @@ run = do
     write "NICK" nick
     write "USER" (nick++" 0 * :tutorial bot")
     write "JOIN" chan
-    gets socket >>= listen
+    use socket >>= listen
 
 --
 -- Process each line from the server
@@ -87,14 +92,11 @@ eval x | "!MBid " `isPrefixOf` x = privmsg (drop 6 x)
 eval x                           = expandVocabulary x
 
 expandVocabulary :: String -> Net ()
-expandVocabulary x = modify updateBot
-  where updateBot b = b { mChain = mappend newChain (mChain b) }
-        newChain = markovChain $ words x
+expandVocabulary x = mChain %= (mappend newChain)
+  where newChain = markovChain $ words x
 
 speak :: Net ()
-speak = do
-  chain <- gets mChain
-  privmsg $ unwords $ traverse' (chain) 15
+speak = use mChain >>= privmsg . unwords . flip traverse' 15
 
 --
 -- Send a privmsg to the current chan + server
@@ -107,7 +109,7 @@ privmsg s = write "PRIVMSG" (chan ++ " :" ++ s)
 --
 write :: String -> String -> Net ()
 write s t = do
-    h <- gets socket
+    h <- use socket
     io $ hPrintf h "%s %s\r\n" s t
     io $ printf    "> %s %s\n" s t
 
